@@ -60,7 +60,7 @@
 
 int custom_hz = LIMIT_60_HZ;
 module_param(custom_hz, int, 0644);
-MODULE_PARM_DESC(custom_hz, "Accepted values are: 50, 55, 60, default");
+MODULE_PARM_DESC(custom_hz, "Accepted values are: 50, 55, 60");
 
 static int mdss_mdp_overlay_free_fb_pipe(struct msm_fb_data_type *mfd);
 static int mdss_mdp_overlay_fb_parse_dt(struct msm_fb_data_type *mfd);
@@ -3512,13 +3512,11 @@ static void dfps_update_panel_params(struct mdss_panel_data *pdata,
 	}
 }
 
-int check_userspace_fps_chose(struct mdss_panel_data *pdata)
+int check_userspace_fps_chose(void)
 {
-	int ret = pdata->panel_info.max_fps; /* Default */
-
-	if (custom_hz < LIMIT_50_HZ || custom_hz > ret) {
-		if (custom_hz > ret) {
-			custom_hz = ret;
+	if (custom_hz < LIMIT_50_HZ || custom_hz > LIMIT_60_HZ) {
+		if (custom_hz > LIMIT_60_HZ) {
+			custom_hz = LIMIT_60_HZ;
 			return custom_hz; /* return default Hz*/
 		} else {
 			custom_hz = LIMIT_50_HZ;
@@ -3527,9 +3525,7 @@ int check_userspace_fps_chose(struct mdss_panel_data *pdata)
 
 	} else {
 
-		if (custom_hz > LIMIT_60_HZ && custom_hz < ret) {
-			custom_hz = ret;
-		} else if (custom_hz > LIMIT_55_HZ && custom_hz < LIMIT_60_HZ) {
+		if (custom_hz > LIMIT_55_HZ && custom_hz < LIMIT_60_HZ) {
 			custom_hz = LIMIT_60_HZ;
 		} else if (custom_hz > LIMIT_50_HZ && custom_hz < LIMIT_55_HZ) {
 			custom_hz = LIMIT_55_HZ;
@@ -3545,7 +3541,7 @@ int mdss_mdp_dfps_update_params(struct msm_fb_data_type *mfd,
 	struct fb_var_screeninfo *var = &mfd->fbi->var;
 	struct mdss_overlay_private *mdp5_data = mfd_to_mdp5_data(mfd);
 	u32 dfps = dfps_data->fps;
-	int change_fps = check_userspace_fps_chose(pdata);
+	int change_fps = check_userspace_fps_chose();
 
 	mutex_lock(&mdp5_data->dfps_lock);
 
