@@ -182,8 +182,7 @@ Optional properties:
 - qcom,min-refresh-rate:		Minimum refresh rate supported by the panel. Used in
 					adaptive variable refresh(AVR) to compute new avr vtotal
 - qcom,max-refresh-rate:		Maximum refresh rate supported by the panel. If max refresh
-					rate is not specified, then the frame rate of the panel in
-					qcom,mdss-dsi-panel-framerate is used.
+					rate is not specified, then use 60 frame rate by default.
 - qcom,mdss-dsi-bl-pmic-control-type:	A string that specifies the implementation of backlight
 					control for this panel.
 					"bl_ctrl_pwm" = Backlight controlled by PWM gpio.
@@ -276,8 +275,6 @@ Optional properties:
 					"trigger_sw" = Triggered by software (default)
 					"trigger_sw_seof" = Software trigger and start/end of frame trigger.
 					"trigger_sw_te" = Software trigger and TE
-- qcom,mdss-dsi-panel-framerate:	Specifies the frame rate for the panel.
-					60 = 60 frames per second (default)
 - qcom,mdss-dsi-host-esc-clk-freq-hz:	Specifies the escape clock needed for the host.
 					19200000 = 19.2 MHz (default)
 - qcom,mdss-dsi-panel-clockrate:	A 64 bit value specifies the panel clock speed in Hz.
@@ -675,7 +672,6 @@ Example:
 		qcom,mdss-dsi-stream = <0>;
 		qcom,mdss-dsi-mdp-trigger = <0>;
 		qcom,mdss-dsi-dma-trigger = <0>;
-		qcom,mdss-dsi-panel-framerate = <60>;
 		qcom,mdss-dsi-host-esc-clk-freq-hz = <19200000>;
 		qcom,mdss-dsi-panel-clockrate = <424000000>;
 		qcom,mdss-mdp-kickoff-threshold = <11 2430>;
@@ -765,7 +761,6 @@ Example:
 				qcom,mdss-dsi-v-back-porch = <4>;
 				qcom,mdss-dsi-v-front-porch = <728>;
 				qcom,mdss-dsi-v-pulse-width = <4>;
-				qcom,mdss-dsi-panel-framerate = <60>;
 				qcom,mdss-dsi-panel-timings = [E6 38 26 00 68 6E 2A 3C 2C 03 04 00];
 				qcom,mdss-dsi-t-clk-post = <0x02>;
 				qcom,mdss-dsi-t-clk-pre = <0x2a>;

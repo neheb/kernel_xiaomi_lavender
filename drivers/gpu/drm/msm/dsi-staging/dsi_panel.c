@@ -425,13 +425,7 @@ static int dsi_panel_parse_timing(struct dsi_mode_info *mode,
 {
 	int rc = 0;
 
-	rc = of_property_read_u32(of_node, "qcom,mdss-dsi-panel-framerate",
-				  &mode->refresh_rate);
-	if (rc) {
-		pr_err("failed to read qcom,mdss-dsi-panel-framerate, rc=%d\n",
-		       rc);
-		goto error;
-	}
+	mode->refresh_rate = 60;
 
 	rc = of_property_read_u32(of_node, "qcom,mdss-dsi-panel-width",
 				  &mode->h_active);
@@ -815,19 +809,10 @@ static int dsi_panel_parse_dfps_caps(struct dsi_dfps_capabilities *dfps_caps,
 		rc = of_property_read_u32(of_node,
 					  "qcom,mdss-dsi-max-refresh-rate",
 					  &val);
-		if (rc) {
+		if (rc)
 			pr_debug("[%s] Using default refresh rate\n", name);
-			rc = of_property_read_u32(of_node,
-						"qcom,mdss-dsi-panel-framerate",
-						&val);
-			if (rc) {
-				pr_err("[%s] max refresh rate is not defined\n",
-				       name);
-				rc = -EINVAL;
-				goto error;
-			}
-		}
-		dfps_caps->max_refresh_rate = val;
+
+		dfps_caps->max_refresh_rate = 60;
 
 		if (dfps_caps->min_refresh_rate > dfps_caps->max_refresh_rate) {
 			pr_err("[%s] min rate > max rate\n", name);
