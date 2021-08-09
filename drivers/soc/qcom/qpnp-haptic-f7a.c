@@ -567,14 +567,14 @@ static int qpnp_hap_mod_enable(struct qpnp_hap *hap, bool on)
 				break;
 			}
 		}
-		pr_info("zjl %s  11 val == %d\n", __func__, val);
+		pr_debug("zjl %s  11 val == %d\n", __func__, val);
 		if (i >= QPNP_HAP_MAX_RETRIES)
 			pr_debug("Haptics Busy. Force disable\n");
 	}
 
 	val = on ? QPNP_HAP_EN_BIT : 0;
 	rc = qpnp_hap_write_reg(hap, QPNP_HAP_EN_CTL_REG(hap->base), val);
-	pr_info("zjl %s  end val == %d\n", __func__, val);
+	pr_debug("zjl %s  end val == %d\n", __func__, val);
 	if (rc < 0)
 		return rc;
 
@@ -2334,7 +2334,7 @@ static void qpnp_hap_td_enable(struct timed_output_dev *dev, int time_ms)
 	time_ms = (time_ms > hap->timeout_ms ? hap->timeout_ms : time_ms);
 	hap->play_time_ms = time_ms;
 	hap->state = 1;
-	pr_info("zjl aaa  haptic  =%d\n", time_ms);
+	pr_debug("zjl aaa  haptic  =%d\n", time_ms);
 	hrtimer_start(&hap->hap_timer,
 		ktime_set(time_ms / 1000, (time_ms % 1000) * 1000000),
 		HRTIMER_MODE_REL);
