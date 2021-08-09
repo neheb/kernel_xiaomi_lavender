@@ -25,7 +25,6 @@
  * DEFINE CONFIGURATION
  ****************************************************************************************
  */
-#define TP_GESTURE_LOG_ENABLE
 #define TP_GESTURE_TAG           "LCT_TP_GESTURE"
 
 #ifdef TP_GESTURE_LOG_ENABLE
