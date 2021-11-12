@@ -119,5 +119,4 @@ android/configs/android-*.cfg
 
 # build
 out/
-build.sh
 kernel.log
