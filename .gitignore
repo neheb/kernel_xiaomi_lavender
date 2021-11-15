@@ -120,3 +120,4 @@ android/configs/android-*.cfg
 # build
 out/
 kernel.log
+*.zip
