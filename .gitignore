@@ -121,3 +121,8 @@ android/configs/android-*.cfg
 out/
 kernel.log
 *.zip
+
+#
+#Ignoring Android.bp link file
+#
+Android.bp
