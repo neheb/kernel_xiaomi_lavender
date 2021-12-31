@@ -1789,6 +1789,7 @@ CONFIG_CNSS_UTILS=y
 # CONFIG_WAN is not set
 # CONFIG_VMXNET3 is not set
 # CONFIG_RMNET is not set
+CONFIG_WIREGUARD=y
 # CONFIG_ISDN is not set
 # CONFIG_NVM is not set
 
