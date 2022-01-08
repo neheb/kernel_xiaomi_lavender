@@ -177,4 +177,10 @@ if [ $SEND ]; then
         -F caption="-Keep Rave" \
         -F document=@"Rave-$DATE.zip" \
         https://api.telegram.org/bot"${1}"/sendDocument
+
+    curl -s -X POST "https://api.telegram.org/bot"${1}"/sendMessage" \
+	    -d chat_id="$chat_id" \
+	    -d "disable_web_page_preview=true" \
+	    -d "parse_mode=html" \
+	    -d text="<b>Branch</b>: <code>$(git rev-parse --abbrev-ref HEAD)</code>%0A<b>Last Commit</b>: <code>$(git log --pretty=format:'%s' -1)</code>%0A<b>Kernel Version</b>: <code>$(make kernelversion)</code>"
 fi
