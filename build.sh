@@ -44,7 +44,7 @@ fi
 #
 # My grp chat id
 #
-chat_id="-1001340890952"
+chat_id="-1001441002138"
 
 #
 # build from
