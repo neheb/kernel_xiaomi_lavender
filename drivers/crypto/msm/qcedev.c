@@ -1699,57 +1699,58 @@ long qcedev_ioctl(struct file *file, unsigned cmd, unsigned long arg)
 		}
 	case QCEDEV_IOCTL_SHA_UPDATE_REQ:
 		{
-		struct scatterlist sg_src;
+			struct scatterlist sg_src;
 
-		if (copy_from_user(&qcedev_areq->sha_op_req,
-					(void __user *)arg,
-					sizeof(struct qcedev_sha_op_req))) {
-			err = -EFAULT;
-			goto exit_free_qcedev_areq;
-		}
-		mutex_lock(&hash_access_lock);
-		if (qcedev_check_sha_params(&qcedev_areq->sha_op_req, podev)) {
-			mutex_unlock(&hash_access_lock);
-			err = -EINVAL;
-			goto exit_free_qcedev_areq;
-		}
-		qcedev_areq->op_type = QCEDEV_CRYPTO_OPER_SHA;
-
-		if (qcedev_areq->sha_op_req.alg == QCEDEV_ALG_AES_CMAC) {
-			err = qcedev_hash_cmac(qcedev_areq, handle, &sg_src);
-			if (err) {
-				mutex_unlock(&hash_access_lock);
+			if (copy_from_user(&qcedev_areq->sha_op_req,
+						(void __user *)arg,
+						sizeof(struct qcedev_sha_op_req))) {
+				err = -EFAULT;
 				goto exit_free_qcedev_areq;
 			}
-		} else {
-			if (handle->sha_ctxt.init_done == false) {
-				pr_err("%s Init was not called\n", __func__);
+			mutex_lock(&hash_access_lock);
+			if (qcedev_check_sha_params(&qcedev_areq->sha_op_req, podev)) {
 				mutex_unlock(&hash_access_lock);
 				err = -EINVAL;
 				goto exit_free_qcedev_areq;
 			}
-			err = qcedev_hash_update(qcedev_areq, handle, &sg_src);
-			if (err) {
+			qcedev_areq->op_type = QCEDEV_CRYPTO_OPER_SHA;
+
+			if (qcedev_areq->sha_op_req.alg == QCEDEV_ALG_AES_CMAC) {
+				err = qcedev_hash_cmac(qcedev_areq, handle, &sg_src);
+				if (err) {
+					mutex_unlock(&hash_access_lock);
+					goto exit_free_qcedev_areq;
+				}
+			} else {
+				if (handle->sha_ctxt.init_done == false) {
+					pr_err("%s Init was not called\n", __func__);
+					mutex_unlock(&hash_access_lock);
+					err = -EINVAL;
+					goto exit_free_qcedev_areq;
+				}
+				err = qcedev_hash_update(qcedev_areq, handle, &sg_src);
+				if (err) {
+					mutex_unlock(&hash_access_lock);
+					goto exit_free_qcedev_areq;
+				}
+			}
+
+			if (handle->sha_ctxt.diglen > QCEDEV_MAX_SHA_DIGEST) {
+				pr_err("Invalid sha_ctxt.diglen %d\n",
+						handle->sha_ctxt.diglen);
 				mutex_unlock(&hash_access_lock);
+				err = -EINVAL;
 				goto exit_free_qcedev_areq;
 			}
-		}
-
-		if (handle->sha_ctxt.diglen > QCEDEV_MAX_SHA_DIGEST) {
-			pr_err("Invalid sha_ctxt.diglen %d\n",
+			memcpy(&qcedev_areq->sha_op_req.digest[0],
+					&handle->sha_ctxt.digest[0],
 					handle->sha_ctxt.diglen);
 			mutex_unlock(&hash_access_lock);
-			err = -EINVAL;
-			goto exit_free_qcedev_areq;
-		}
-		memcpy(&qcedev_areq->sha_op_req.digest[0],
-				&handle->sha_ctxt.digest[0],
-				handle->sha_ctxt.diglen);
-		mutex_unlock(&hash_access_lock);
-		if (copy_to_user((void __user *)arg, &qcedev_areq->sha_op_req,
-					sizeof(struct qcedev_sha_op_req)))
-			err = -EFAULT;
-			goto exit_free_qcedev_areq;
+			if (copy_to_user((void __user *)arg, &qcedev_areq->sha_op_req,
+						sizeof(struct qcedev_sha_op_req))) {
+				err = -EFAULT;
+				goto exit_free_qcedev_areq;
+			}
 		}
 		break;
 
