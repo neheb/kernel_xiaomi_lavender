@@ -101,11 +101,6 @@ export KBUILD_BUILD_HOST="RaveRules"
 DATE=$(date +"%Y%m%d-%H%M")
 
 #
-# Compiler type
-#
-TOOLCHAIN_DIRECTORY="../toolchain"
-
-#
 # Build defconfig
 #
 DEFCONFIG="lavender_defconfig"
@@ -116,7 +111,7 @@ export CROSS_COMPILE_ARM32=$(pwd)/../gcc-arm/bin/arm-eabi-
 export ARCH=arm64 && export SUBARCH=arm64
 
 make O=out ARCH=arm64 $DEFCONFIG
-make -j$CPU O=out -j8
+make -j$CPU O=out
 
 if [ ! -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
     echo -e "${red}"
