@@ -35,7 +35,7 @@ static u64 cfq_group_idle = NSEC_PER_SEC / 125;
 static const u64 cfq_target_latency = (u64)NSEC_PER_SEC * 3/10; /* 300 ms */
 static const int cfq_hist_divisor = 4;
 
-extern struct blkcg *blkcg_bg;
+struct blkcg *blkcg_bg;
 
 /*
  * offset from end of queue service tree for idle class
