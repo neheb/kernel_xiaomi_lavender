@@ -101,55 +101,17 @@ export KBUILD_BUILD_HOST="RaveRules"
 DATE=$(date +"%Y%m%d-%H%M")
 
 #
-# Compiler type
-#
-TOOLCHAIN_DIRECTORY="../toolchain"
-
-#
 # Build defconfig
 #
 DEFCONFIG="lavender_defconfig"
 
-#
-# Check for compiler
-#
-if [ ! -d "$TOOLCHAIN_DIRECTORY" ]; then
-    mkdir $TOOLCHAIN_DIRECTORY
-fi
+export CROSS_COMPILE=$(pwd)/../gcc-arm64/bin/aarch64-elf-
+export CROSS_COMPILE_ARM32=$(pwd)/../gcc-arm/bin/arm-eabi-
 
+export ARCH=arm64 && export SUBARCH=arm64
 
-if [ -d "$TOOLCHAIN_DIRECTORY/clang" ]; then
-    echo -e "${bldgrn}"
-    echo "Proton-Clang is ready"
-    echo -e "${txtrst}"
-else
-    echo -e "${red}"
-    echo "Need to download Proton-Clang"
-    echo -e "${txtrst}"
-    git clone --depth=1 https://github.com/Peppe289/proton-clang.git $TOOLCHAIN_DIRECTORY/clang
-    if [ ! -d "$TOOLCHAIN_DIRECTORY/clang" ]; then
-        echo -e "${red}"
-        echo "Error to download Clang"
-        echo -e "${txtrst}"
-        exit
-    fi
-fi
-
-#
-# Build start with Proton Clang
-#
-PATH="$(pwd)/$TOOLCHAIN_DIRECTORY/clang/bin:${PATH}"
 make O=out ARCH=arm64 $DEFCONFIG
-make -j$CPU O=out \
-			ARCH=arm64 \
-			CC=clang \
-			AR=llvm-ar \
-			NM=llvm-nm \
-			OBJCOPY=llvm-objcopy \
-			OBJDUMP=llvm-objdump \
-			STRIP=llvm-strip \
-			CROSS_COMPILE=aarch64-linux-gnu- \
-			CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+make -j$CPU O=out
 
 if [ ! -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
     echo -e "${red}"
