@@ -109,7 +109,7 @@ build(){
 
 	make_clean
 
-	make_build "${1}_defconfig"
+	make_build "${1}-perf_defconfig"
 
 	mkzip "Rave-${1}${2}${3}-$DATE.zip"
 }
