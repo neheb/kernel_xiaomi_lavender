@@ -247,6 +247,10 @@ int cpufreq_generic_init(struct cpufreq_policy *policy,
 	}
 
 	policy->cpuinfo.transition_latency = transition_latency;
+	/**
+	 * Set standard mode by default.
+	 */
+	policy->burst_mode = 0;
 
 	/*
 	 * The driver only supports the SMP configuration where all processors
@@ -737,11 +741,19 @@ static ssize_t show_##file_name				\
 	return sprintf(buf, "%u\n", policy->object);	\
 }
 
+#define show_one_burst(file_name)			\
+static ssize_t show_##file_name				\
+(struct cpufreq_policy *policy, char *buf)		\
+{							\
+	return sprintf(buf, "%u\n", policy->burst_mode);	\
+}
+
 show_one(cpuinfo_min_freq, cpuinfo.min_freq);
 show_one(cpuinfo_max_freq, cpuinfo.max_freq);
 show_one(cpuinfo_transition_latency, cpuinfo.transition_latency);
 show_one(scaling_min_freq, min);
 show_one(scaling_max_freq, max);
+show_one_burst(burst_mode);
 
 static ssize_t show_scaling_cur_freq(struct cpufreq_policy *policy, char *buf)
 {
@@ -758,36 +770,63 @@ static int cpufreq_set_policy(struct cpufreq_policy *policy,
 				struct cpufreq_policy *new_policy);
 
 /**
- * cpufreq_per_cpu_attr_write() / store_##file_name() - sysfs write access
+ * We are working with QCOM which in its frequency input driver implements
+ * CPUFREQ_TABLE_END at the input end.
+ * So we have to look it up in the dynamic array to be able to figure out
+ * what is the maximum frequency of the cluster
  */
-#define store_one(file_name, object)			\
+static int cpufreq_max_index(struct cpufreq_policy policy) {
+	int i;
+
+	for (i = 0; policy.freq_table[i].frequency != CPUFREQ_TABLE_END; ++i);
+
+	return i - 1;
+}
+
+static ssize_t burst_mode_udate(struct cpufreq_policy *policy, const char *buf, size_t count) {
+	int ret;
+	unsigned int temp;
+	int index_max = cpufreq_max_index(*policy);
+	struct cpufreq_policy new_policy;
+
+	if (&policy->max == &policy->min)
+		return count;
+
+	memcpy(&new_policy, policy, sizeof(*policy));
+	new_policy.min = policy->user_policy.min;
+	new_policy.max = policy->user_policy.max;
+
+	ret = sscanf(buf, "%u", &new_policy.burst_mode);
+	if (ret != 1)
+		return -EINVAL;
+	
+	temp = new_policy.burst_mode;
+
+	if (temp == 0) {
+		/** standard mode **/
+		new_policy.min = new_policy.freq_table[0].frequency;
+		new_policy.max = new_policy.freq_table[index_max].frequency;
+	} else {
+		/** temp value **/
+		new_policy.min = new_policy.freq_table[2].frequency;
+		new_policy.max = new_policy.freq_table[index_max - 1].frequency;
+	}
+
+	ret = cpufreq_set_policy(policy, &new_policy);
+	if (!ret)
+		policy->burst_mode = temp;
+
+	return ret ? ret : count;	
+}
+
+#define store_one(file_name)			\
 static ssize_t store_##file_name					\
 (struct cpufreq_policy *policy, const char *buf, size_t count)		\
 {									\
-	int ret, temp;							\
-	struct cpufreq_policy new_policy;				\
-									\
-	if (&policy->object == &policy->min)				\
-		return count;						\
-									\
-	memcpy(&new_policy, policy, sizeof(*policy));			\
-	new_policy.min = policy->user_policy.min;			\
-	new_policy.max = policy->user_policy.max;			\
-									\
-	ret = sscanf(buf, "%u", &new_policy.object);			\
-	if (ret != 1)							\
-		return -EINVAL;						\
-									\
-	temp = new_policy.object;					\
-	ret = cpufreq_set_policy(policy, &new_policy);		\
-	if (!ret)							\
-		policy->user_policy.object = temp;			\
-									\
-	return ret ? ret : count;					\
+	return burst_mode_udate(policy, buf, count); \
 }
 
-store_one(scaling_min_freq, min);
-store_one(scaling_max_freq, max);
+store_one(burst_mode);
 
 /**
  * show_cpuinfo_cur_freq - current CPU frequency as detected by hardware
@@ -960,8 +999,9 @@ cpufreq_freq_attr_ro(scaling_cur_freq);
 cpufreq_freq_attr_ro(bios_limit);
 cpufreq_freq_attr_ro(related_cpus);
 cpufreq_freq_attr_ro(affected_cpus);
-cpufreq_freq_attr_rw(scaling_min_freq);
-cpufreq_freq_attr_rw(scaling_max_freq);
+cpufreq_freq_attr_ro(scaling_min_freq);
+cpufreq_freq_attr_ro(scaling_max_freq);
+cpufreq_freq_attr_rw(burst_mode);
 cpufreq_freq_attr_rw(scaling_governor);
 cpufreq_freq_attr_rw(scaling_setspeed);
 
@@ -971,6 +1011,7 @@ static struct attribute *default_attrs[] = {
 	&cpuinfo_transition_latency.attr,
 	&scaling_min_freq.attr,
 	&scaling_max_freq.attr,
+	&burst_mode.attr,
 	&affected_cpus.attr,
 	&related_cpus.attr,
 	&scaling_governor.attr,
@@ -2298,6 +2339,13 @@ static int cpufreq_set_policy(struct cpufreq_policy *policy,
 	ret = cpufreq_driver->verify(new_policy);
 	if (ret)
 		return ret;
+
+	/**
+	 * It also updates the burst value when you update the policy.
+	 * Check the range of use.
+	 */
+	if (new_policy->burst_mode >= 0 && 1 <= new_policy->burst_mode)
+		policy->burst_mode = new_policy->burst_mode;
 
 	/* adjust if necessary - all reasons */
 	blocking_notifier_call_chain(&cpufreq_policy_notifier_list,

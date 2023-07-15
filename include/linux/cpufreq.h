@@ -76,6 +76,12 @@ struct cpufreq_policy {
 	unsigned int		restore_freq; /* = policy->cur before transition */
 	unsigned int		suspend_freq; /* freq to set during suspend */
 
+	/**
+	 * This manages different energy plan modes and performances.
+	 * Custom variable in beta
+	 */
+	unsigned int		burst_mode;
+
 	unsigned int		policy; /* see above */
 	unsigned int		last_policy; /* policy before unplug */
 	struct cpufreq_governor	*governor; /* see below */
