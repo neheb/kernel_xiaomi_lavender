@@ -781,14 +781,32 @@ static int cpufreq_max_index(struct cpufreq_policy policy) {
 	return i - 1;
 }
 
+/**
+ * The balanced mode takes care of not modifying the minimum frequency,
+ * but limiting the maximum frequency to a previous step.
+ */
+static void burst_balanced_mode(int *index_freq) {
+	/**
+	 * In this case the frequency is one and we cannot
+	 * modify the settings.
+	 */
+	if (index_freq[1] == 0)
+		return;
+
+	/* reduce the maximum frequency by 1 step */
+	index_freq[1] = index_freq[1] - 1;
+}
+
 static ssize_t burst_mode_udate(struct cpufreq_policy *policy, const char *buf, size_t count) {
 	int ret;
 	unsigned int temp;
-	int index_max = cpufreq_max_index(*policy);
 	struct cpufreq_policy new_policy;
+	int index_freq[2] = {0};
 
 	if (&policy->max == &policy->min)
 		return count;
+
+	index_freq[1] = cpufreq_max_index(*policy);
 
 	memcpy(&new_policy, policy, sizeof(*policy));
 	new_policy.min = policy->user_policy.min;
@@ -800,15 +818,19 @@ static ssize_t burst_mode_udate(struct cpufreq_policy *policy, const char *buf, 
 	
 	temp = new_policy.burst_mode;
 
-	if (temp == 0) {
-		/** standard mode **/
-		new_policy.min = new_policy.freq_table[0].frequency;
-		new_policy.max = new_policy.freq_table[index_max].frequency;
-	} else {
-		/** temp value **/
-		new_policy.min = new_policy.freq_table[2].frequency;
-		new_policy.max = new_policy.freq_table[index_max - 1].frequency;
-	}
+	/**
+	 * Note: standard mode (value 0) does not need a helper function or controls to update
+	 * the maximum range. the formal range is set at the first instructions
+	 * of the function, it is not necessary to modify or carry out further comparisons.
+	 * 
+	 * The following comparisons take care of updating the value of index to identify
+	 * the suitable frequencies different from the formal ones.
+	 */
+	if (temp == 1)
+		burst_balanced_mode(index_freq);
+
+	new_policy.min = new_policy.freq_table[index_freq[0]].frequency;
+	new_policy.max = new_policy.freq_table[index_freq[1]].frequency;
 
 	ret = cpufreq_set_policy(policy, &new_policy);
 	if (!ret)
