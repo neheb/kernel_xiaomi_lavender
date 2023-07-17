@@ -751,8 +751,6 @@ static ssize_t show_##file_name				\
 show_one(cpuinfo_min_freq, cpuinfo.min_freq);
 show_one(cpuinfo_max_freq, cpuinfo.max_freq);
 show_one(cpuinfo_transition_latency, cpuinfo.transition_latency);
-show_one(scaling_min_freq, min);
-show_one(scaling_max_freq, max);
 show_one_burst(burst_mode);
 
 static ssize_t show_scaling_cur_freq(struct cpufreq_policy *policy, char *buf)
@@ -999,8 +997,6 @@ cpufreq_freq_attr_ro(scaling_cur_freq);
 cpufreq_freq_attr_ro(bios_limit);
 cpufreq_freq_attr_ro(related_cpus);
 cpufreq_freq_attr_ro(affected_cpus);
-cpufreq_freq_attr_ro(scaling_min_freq);
-cpufreq_freq_attr_ro(scaling_max_freq);
 cpufreq_freq_attr_rw(burst_mode);
 cpufreq_freq_attr_rw(scaling_governor);
 cpufreq_freq_attr_rw(scaling_setspeed);
@@ -1009,8 +1005,6 @@ static struct attribute *default_attrs[] = {
 	&cpuinfo_min_freq.attr,
 	&cpuinfo_max_freq.attr,
 	&cpuinfo_transition_latency.attr,
-	&scaling_min_freq.attr,
-	&scaling_max_freq.attr,
 	&burst_mode.attr,
 	&affected_cpus.attr,
 	&related_cpus.attr,
